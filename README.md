@@ -1,6 +1,6 @@
 # SPOTYBOX
-Free Jukebox 
-![ ](./docs/fav_icon.png)
+ 
+![Free Jukebox ](./docs/fav_icon.png)
 
 # Jukebox Web Player 🎵
 
