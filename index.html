@@ -4,125 +4,357 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SPOTYBOX by Alex</title>
- <link rel="icon" type="image/png" href="docs/fav_icon.png">  
+<link rel="icon" type="image/png" href="docs/fav_icon.png">
 
 <!-- libs -->
 <script src="https://unpkg.com/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
 <script src="https://unpkg.com/browser-id3-writer@4.0.0/dist/browser-id3-writer.umd.js"></script>
 
 <style>
-:root{--yellow:#ffd54a;--bg:#0b0b0b;--muted:#666}
-body{margin:0;font-family:Arial,Helvetica,sans-serif;background:linear-gradient(135deg,#050505,#0e0e0e);color:#eee;padding:18px}
-.container{max-width:1100px;margin:0 auto}
-.header{display:flex;align-items:center;gap:12px}
-.cover{width:260px;height:260px;border-radius:8px;object-fit:cover;border:3px solid rgba(255,213,74,0.12)}
-.led{background:#000;padding:6px 10px;border-radius:6px;color:var(--yellow);border:2px solid rgba(255,213,74,0.06)}
-.controls{display:flex;gap:12px;align-items:center}
-.btn-yellow{background:var(--yellow);color:#000;border:none;padding:10px 14px;border-radius:999px;cursor:pointer}
-.btn-icon{background:transparent;border:none;color:var(--yellow);font-size:22px;cursor:pointer}
-.card{background:linear-gradient(145deg,#0e0e0e,#0b0b0b);padding:14px;border-radius:10px;border:1px solid rgba(255,213,74,0.04)}
-#cover-loader{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.55);border-radius:8px}
-.spinner{width:48px;height:48px;border-radius:50%;border:6px solid rgba(255,213,74,0.12);border-top-color:var(--yellow);animation:spin 1s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.eq-bars{display:flex;gap:6px;height:80px;align-items:flex-end;margin-top:8px}
-.eq-bar{width:10px;background:linear-gradient(180deg,var(--yellow),#ffd700);border-radius:6px;height:6px;transition:height .06s}
-.slider{width:140px}
-.modal{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,0.6);z-index:80}
-.modal-card{background:#0b0b0b;padding:16px;border-radius:10px;width:520px;border:1px solid rgba(255,213,74,0.06)}
-.playlist-item{display:flex;justify-content:space-between;align-items:center;padding:8px;background:rgba(255,255,255,0.02);border-radius:8px}
-.small{font-size:0.9rem;color:var(--muted)}
-a.link{color:var(--yellow)}
+/* ==============================
+   ROOT + GLOBAL
+============================== */
+:root{
+  --yellow:#ffd54a;
+  --bg:#0b0b0b;
+  --muted:#999;
+}
+
+body{
+  margin:0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:linear-gradient(135deg,#050505,#0e0e0e);
+  color:#eee;
+  padding:16px;
+}
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+}
+
+/* ==============================
+   HEADER
+============================== */
+.header{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
+
+.led{
+  background:#000;
+  padding:6px 12px;
+  border-radius:6px;
+  color:var(--yellow);
+  border:2px solid rgba(255,213,74,0.10);
+  font-size:1.2rem;
+  text-align:center;
+}
+
+/* ==============================
+   COVER + INFO PANEL
+============================== */
+#cover-art{
+  width:260px;
+  height:260px;
+  border-radius:8px;
+  object-fit:cover;
+  border:3px solid rgba(255,213,74,0.15);
+  flex-shrink:0;
+}
+
+.cover-wrapper{
+  position:relative;
+}
+
+#cover-loader{
+  position:absolute;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.6);
+  border-radius:8px;
+}
+
+.spinner{
+  width:48px;height:48px;border-radius:50%;
+  border:6px solid rgba(255,213,74,0.25);
+  border-top-color:var(--yellow);
+  animation:spin 1s linear infinite;
+}
+@keyframes spin { to{ transform:rotate(360deg); } }
+
+/* ==============================
+   BUTTONS + CONTROLS
+============================== */
+.controls{
+  display:flex;
+  gap:12px;
+  align-items:center;
+  flex-wrap:wrap;
+}
+
+.btn-yellow{
+  background:var(--yellow);
+  color:#000;
+  border:none;
+  padding:10px 16px;
+  border-radius:999px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+.btn-icon{
+  background:transparent;
+  border:none;
+  color:var(--yellow);
+  font-size:26px;
+  cursor:pointer;
+}
+
+/* ==============================
+   SLIDERS
+============================== */
+.slider{
+  width:140px;
+}
+
+@media(max-width:600px){
+  .slider{ width:100px; }
+}
+
+/* ==============================
+   CARDS + PLAYLIST
+============================== */
+.card{
+  background:#0b0b0b;
+  padding:14px;
+  border-radius:10px;
+  border:1px solid rgba(255,213,74,0.08);
+}
+
+.playlist-item{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px;
+  margin-top:6px;
+  background:rgba(255,255,255,0.03);
+  border-radius:8px;
+  font-size:0.95rem;
+  flex-wrap:wrap;
+}
+
+.small{
+  font-size:0.9rem;
+  color:var(--muted);
+}
+
+a.link{
+  color:var(--yellow);
+}
+
+/* ==============================
+   EQ PANEL
+============================== */
+.eq-bars{
+  display:flex;
+  gap:6px;
+  height:80px;
+  align-items:flex-end;
+  margin-top:8px;
+}
+
+.eq-bar{
+  width:10px;
+  background:linear-gradient(180deg,var(--yellow),#ffce3a);
+  border-radius:6px;
+  height:6px;
+  transition:height .06s;
+}
+
+/* ==============================
+   MODAL RESPONSIVE
+============================== */
+.modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  background:rgba(0,0,0,0.7);
+  z-index:999;
+  padding:20px;
+}
+
+.modal-card{
+  background:#111;
+  padding:16px;
+  border-radius:10px;
+  width:100%;
+  max-width:420px;
+  border:1px solid rgba(255,213,74,0.08);
+}
+
+/* ==============================
+   RESPONSIVE LAYOUT MAIN
+============================== */
+.main-flex{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+  margin-top:20px;
+}
+
+.main-info{
+  flex:1;
+  min-width:260px;
+}
+
+@media(max-width:768px){
+  #cover-art{
+    width:200px;
+    height:200px;
+  }
+}
+
+@media(max-width:560px){
+  #cover-art{
+    width:160px;
+    height:160px;
+  }
+
+  .btn-yellow{
+    padding:8px 12px;
+    font-size:0.9rem;
+  }
+
+  .btn-icon{
+    font-size:22px;
+  }
+
+  body{
+    padding:10px;
+  }
+
+  .led{
+    font-size:1rem;
+    padding:6px 8px;
+  }
+}
 </style>
 </head>
+
 <body>
 <div class="container">
+
+  <!-- HEADER -->
   <div class="header">
     <h1 class="led">SPOTYBOX by Alex</h1>
   </div>
 
-  <div style="display:flex;gap:18px;margin-top:12px;flex-wrap:wrap">
-    <div style="position:relative">
-      <img id="cover-art" class="cover" src="https://placehold.co/600x600/0a0a0a/d4af37?text=♪">
+  <!-- FLEX MAIN -->
+  <div class="main-flex">
+
+    <!-- COVER -->
+    <div class="cover-wrapper">
+      <img id="cover-art" src="https://placehold.co/600x600/0a0a0a/d4af37?text=♪">
       <div id="cover-loader"><div class="spinner"></div></div>
     </div>
 
-    <div style="flex:1">
+    <!-- INFO + CONTROLS -->
+    <div class="main-info">
       <h2 id="track-title" class="small">Selecciona música</h2>
       <p id="track-artist" class="small">---</p>
       <p id="track-album" class="small">---</p>
 
-      <div style="margin-top:8px" class="controls">
+      <!-- LOAD + VOL -->
+      <div class="controls" style="margin-top:8px">
         <label class="btn-yellow">📁 Añadir MP3
-          <input id="file-input" type="file" accept=".mp3" multiple class="hidden">
+          <input id="file-input" type="file" accept=".mp3" multiple hidden>
         </label>
-        <button id="clear-playlist" class="btn-icon" title="Limpiar">🗑️</button>
+
+        <button id="clear-playlist" class="btn-icon">🗑️</button>
+
         <div style="flex:1"></div>
+
         <span class="small">Vol</span>
         <input id="volume-slider" type="range" min="0" max="100" value="80" class="slider">
         <span id="volume-display" class="small">80%</span>
       </div>
 
-      <div style="margin-top:12px" class="controls">
+      <!-- PLAYER CONTROLS -->
+      <div class="controls" style="margin-top:12px">
         <button id="prev-btn" class="btn-icon">⏮️</button>
-        <button id="play-btn" class="btn-yellow" style="width:64px;height:64px">▶</button>
+        <button id="play-btn" class="btn-yellow" style="width:64px;height:64px;">▶</button>
         <button id="next-btn" class="btn-icon">⏭️</button>
-
-        <button id="shuffle-btn" class="btn-icon" title="Shuffle">🔀</button>
-        <button id="repeat-btn" class="btn-icon" title="Repeat">🔁</button>
+        <button id="shuffle-btn" class="btn-icon">🔀</button>
+        <button id="repeat-btn" class="btn-icon">🔁</button>
       </div>
 
-      <div style="margin-top:10px" class="controls">
-        <button id="spotify-info" class="btn-yellow">🔎 Spotify (PKCE)</button>
-        <button id="shazam-info" class="btn-yellow">🎵 Buscar info</button>
-        <button id="toggle-eq" class="btn-icon">🎚️ EQ</button>
-        <button id="edit-tags" class="btn-icon">✏️ Editar ID3</button>
+      <!-- EXTRAS -->
+      <div class="controls" style="margin-top:10px">
+        <button id="spotify-info" class="btn-yellow">🔎 Spotify</button>
+        <button id="shazam-info" class="btn-yellow">🎵 Info</button>
+        <button id="toggle-eq" class="btn-icon">🎚️</button>
+        <button id="edit-tags" class="btn-icon">✏️</button>
       </div>
 
+      <!-- PROGRESS -->
       <div style="margin-top:10px">
-        <input id="progress" type="range" min="0" max="100" value="0" style="width:100%">
-        <div style="display:flex;justify-content:space-between;margin-top:6px"><span id="current-time" class="small">0:00</span><span id="total-time" class="small">0:00</span></div>
+        <input id="progress" type="range" min="0" max="100" value="0" style="width:100%;">
+        <div style="display:flex;justify-content:space-between;margin-top:6px;">
+          <span id="current-time" class="small">0:00</span>
+          <span id="total-time" class="small">0:00</span>
+        </div>
       </div>
-
     </div>
+
   </div>
 
-  <div id="eq-panel" class="card" style="margin-top:14px;display:none">
-    <div style="display:flex;justify-content:space-between;align-items:center">
-      <div class="small">Ecualizador — 6 bandas (activa cambios)</div>
+  <!-- EQ PANEL -->
+  <div id="eq-panel" class="card" style="display:none;margin-top:16px;">
+    <div style="display:flex;justify-content:space-between;">
+      <div class="small">Ecualizador — 6 bandas</div>
       <div class="small">Bypass <input id="bypass-eq" type="checkbox"></div>
     </div>
-    <div style="display:flex;gap:12px;margin-top:10px;align-items:flex-end">
-      <!-- sliders mapped to BiquadFilterNodes -->
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="60" type="range" min="-12" max="12" value="0"><div class="small">60Hz</div></div>
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="170" type="range" min="-12" max="12" value="0"><div class="small">170Hz</div></div>
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="350" type="range" min="-12" max="12" value="0"><div class="small">350Hz</div></div>
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="1000" type="range" min="-12" max="12" value="0"><div class="small">1kHz</div></div>
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="3500" type="range" min="-12" max="12" value="0"><div class="small">3.5kHz</div></div>
-      <div style="display:flex;flex-direction:column;align-items:center"><input class="slider eq-slider" data-freq="10000" type="range" min="-12" max="12" value="0"><div class="small">10kHz</div></div>
+
+    <div style="display:flex;gap:12px;margin-top:10px;flex-wrap:wrap;">
+      <div><input class="slider eq-slider" data-freq="60" type="range" min="-12" max="12" value="0"><div class="small">60Hz</div></div>
+      <div><input class="slider eq-slider" data-freq="170" type="range" min="-12" max="12" value="0"><div class="small">170Hz</div></div>
+      <div><input class="slider eq-slider" data-freq="350" type="range" min="-12" max="12" value="0"><div class="small">350Hz</div></div>
+      <div><input class="slider eq-slider" data-freq="1000" type="range" min="-12" max="12" value="0"><div class="small">1kHz</div></div>
+      <div><input class="slider eq-slider" data-freq="3500" type="range" min="-12" max="12" value="0"><div class="small">3.5kHz</div></div>
+      <div><input class="slider eq-slider" data-freq="10000" type="range" min="-12" max="12" value="0"><div class="small">10kHz</div></div>
     </div>
-    <div class="eq-bars" id="eq-bars-visual" style="margin-top:12px"></div>
+
+    <div class="eq-bars" id="eq-bars-visual" style="margin-top:10px;"></div>
   </div>
 
-  <div style="margin-top:18px" class="card">
-    <div style="display:flex;justify-content:space-between;align-items:center">
+  <!-- PLAYLIST -->
+  <div class="card" style="margin-top:18px;">
+    <div style="display:flex;justify-content:space-between;">
       <strong>Playlist</strong>
       <span id="playlist-count" class="small">0</span>
     </div>
-    <div id="playlist" style="margin-top:8px"></div>
+    <div id="playlist" style="margin-top:10px;"></div>
   </div>
 
 </div>
 
-<!-- EDITOR MODAL (ID3) -->
+<!-- MODAL -->
 <div id="editor-modal" class="modal">
   <div class="modal-card">
     <h3>Editar ID3</h3>
-    <div style="margin-top:8px">
-      <input id="edit-title" placeholder="Title" style="width:100%;padding:8px;margin-bottom:6px">
-      <input id="edit-artist" placeholder="Artist" style="width:100%;padding:8px;margin-bottom:6px">
-      <input id="edit-album" placeholder="Album" style="width:100%;padding:8px;margin-bottom:6px">
-      <input id="edit-cover" type="file" accept="image/*" style="width:100%;margin-bottom:10px">
-      <div style="text-align:right"><button id="save-tags" class="btn-yellow">Guardar</button> <button id="cancel-edit" class="btn-icon">Cancelar</button></div>
+    <input id="edit-title" placeholder="Title" style="width:100%;padding:8px;margin-top:8px;">
+    <input id="edit-artist" placeholder="Artist" style="width:100%;padding:8px;margin-top:8px;">
+    <input id="edit-album" placeholder="Album" style="width:100%;padding:8px;margin-top:8px;">
+    <input id="edit-cover" type="file" accept="image/*" style="width:100%;margin-top:10px;">
+    <div style="text-align:right;margin-top:10px;">
+      <button id="save-tags" class="btn-yellow">Guardar</button>
+      <button id="cancel-edit" class="btn-icon">Cancelar</button>
     </div>
   </div>
 </div>
@@ -334,6 +566,6 @@ document.getElementById('clear-playlist').addEventListener('click', ()=>{ jukebo
 handleSpotifyRedirect();
 
 </script>
+
 </body>
 </html>
-
