@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spoti-Game · Batalla Musical</title>
+    <link rel="icon" type="image/png" href="docs/fav_icon.png">
+    <!-- Librería para confeti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        /* ========== ESTILOS GENERALES ========== */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('img/fondo.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #eee;
+            padding: 16px;
+            min-height: 100vh;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 60px;
+            border: 4px solid #ffd966;
+            padding: 30px;
+            box-shadow: 0 0 40px #ffd966;
+        }
+        h1 {
+            text-align: center;
+            color: #ffd966;
+            font-size: 3rem;
+            margin: 0 0 20px;
+            text-shadow: 0 0 10px;
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 30px;
+            color: #ffd966;
+            text-decoration: none;
+            font-size: 1.2rem;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ========== PANEL DE JUEGO ========== */
+        .game-panel {
+            text-align: center;
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            color: #ccc;
+        }
+        .button {
+            background: #ffd966;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+            border: 2px solid #b8860b;
+            transition: transform 0.1s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Barra de configuración */
+        .config-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 40px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ffd966;
+        }
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .config-item label {
+            color: #ffd966;
+            font-weight: bold;
+        }
+        .config-item select {
+            background: #333;
+            color: #fff;
+            border: 1px solid #ffd966;
+            border-radius: 30px;
+            padding: 8px 15px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* Equipos */
+        .teams-container {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .team-card {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid;
+            border-radius: 40px;
+            padding: 15px 25px;
+            min-width: 150px;
+            text-align: center;
+        }
+        .team-card.blue {
+            border-color: #3a86ff;
+            box-shadow: 0 0 15px #3a86ff;
+        }
+        .team-card.red {
+            border-color: #ff006e;
+            box-shadow: 0 0 15px #ff006e;
+        }
+        .team-card.current {
+            border-width: 4px;
+        }
+        .team-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        .team-name.blue { color: #3a86ff; }
+        .team-name.red { color: #ff006e; }
+        .team-score {
+            font-size: 2.5rem;
+            margin: 5px 0;
+        }
+        .team-jokers {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Botón de reproducción con indicador de equipo */
+        .play-button-container {
+            margin: 20px 0;
+        }
+        .play-team-btn {
+            background: linear-gradient(145deg, #ffd966, #cc9c33);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #b8860b;
+            transition: 0.2s;
+            box-shadow: 0 0 20px #ffd966;
+        }
+        .play-team-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #ffd966;
+        }
+        .play-team-btn.blue {
+            background: linear-gradient(145deg, #3a86ff, #1a4d8c);
+            color: white;
+            border-color: #1a4d8c;
+            box-shadow: 0 0 20px #3a86ff;
+        }
+        .play-team-btn.red {
+            background: linear-gradient(145deg, #ff006e, #a00045);
+            color: white;
+            border-color: #a00045;
+            box-shadow: 0 0 20px #ff006e;
+        }
+
+        /* Opciones múltiples (A, B, C, D) */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .option-btn {
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 60px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.1s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-letter {
+            background: #ffd966;
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: #444;
+            border-color: #ffd966;
+        }
+        .option-btn.correct {
+            background: #38b000;
+            border-color: #fff;
+        }
+        .option-btn.incorrect {
+            background: #d00000;
+            border-color: #fff;
+        }
+        .option-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Feedback y título (oculto hasta después de responder) */
+        .feedback-area {
+            min-height: 60px;
+            font-size: 1.3rem;
+            margin: 15px 0;
+        }
+        .revealed-title {
+            background: rgba(255, 217, 102, 0.2);
+            border-radius: 40px;
+            padding: 10px;
+            font-size: 1.3rem;
+            color: #ffd966;
+            margin: 10px 0;
+        }
+
+        /* Comodines (solo saltar) */
+        .jokers-area {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .joker-btn {
+            background: #2a2a2a;
+            border: 2px solid #ffd966;
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: #ffd966;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .joker-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #666;
+        }
+
+        /* Contenedor para emojis de error */
+        .emoji-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .emoji {
+            position: absolute;
+            font-size: 2rem;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* Info de ronda */
+        .round-info {
+            font-size: 1.3rem;
+            color: #ffd966;
+            margin: 15px 0;
+        }
+
+        /* Ranking */
+        .ranking-area {
+            margin-top: 30px;
+            border-top: 1px solid #555;
+            padding-top: 20px;
+        }
+        .ranking-area h3 {
+            color: #ffd966;
+        }
+        .ranking-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .ranking-item {
+            background: #222;
+            padding: 8px 15px;
+            border-radius: 30px;
+            border-left: 5px solid #ffd966;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Spoti-Game · Batalla Musical</h1>
+    <div id="game-content" class="game-panel">
+        <!-- El contenido se genera dinámicamente -->
+    </div>
+    <a href="index.html" class="back-link">← Volver al reproductor</a>
+</div>
+
+<!-- Contenedor para emojis de error -->
+<div id="emoji-rain" class="emoji-rain"></div>
+
+<script>
+    (function() {
+        // ========== CONFIGURACIÓN ==========
+        const DB_NAME = 'SpotyboxDB';
+        const DB_VERSION = 2;
+        const STORE_NAME = 'canciones';
+
+        let db = null;
+        let tracks = []; // Todas las canciones de la biblioteca (con url)
+
+        // Estado del juego (equipos) - solo comodín skip
+        let teams = [
+            { name: 'Azul', color: 'blue', score: 0, jokers: { skip: 3 } },
+            { name: 'Rojo', color: 'red', score: 0, jokers: { skip: 3 } }
+        ];
+        let currentTeamIndex = 0; // 0 = azul, 1 = rojo
+        let round = 0;
+        const maxRounds = 10;
+
+        let currentTrack = null;          // Canción actual
+        let options = [];                 // Array de { text, correct }
+        let correctIndex = -1;
+        let answerLocked = false;          // Si ya se respondió
+        let usedTrackIds = new Set();       // IDs de canciones ya usadas en la partida
+
+        // Configuración
+        let fragmentDuration = 10;          // 10, 30, o 0 para canción completa
+        let decadeFilter = 'all';            // '80s', '90s', 'all'
+
+        // Objeto Audio para el juego
+        const gameAudio = new Audio();
+        let playTimeout = null;              // Timeout para detener la canción
+
+        // Ranking
+        let ranking = [];
+
+        // Elementos
+        let contentDiv = document.getElementById('game-content');
+        let emojiRainDiv = document.getElementById('emoji-rain');
+
+        // ========== FUNCIONES DE INDEXEDDB ==========
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function loadTracks() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    const loaded = request.result;
+                    loaded.forEach(t => {
+                        if (t.file) {
+                            t.url = URL.createObjectURL(t.file);
+                        }
+                    });
+                    resolve(loaded);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ========== RANKING ==========
+        function loadRanking() {
+            try {
+                ranking = JSON.parse(localStorage.getItem('gameRanking')) || [];
+            } catch(e) { ranking = []; }
+        }
+        function saveRanking() {
+            localStorage.setItem('gameRanking', JSON.stringify(ranking));
+        }
+        function addRankingEntry(name, score) {
+            ranking.push({ name, score, date: new Date().toISOString() });
+            ranking.sort((a, b) => b.score - a.score);
+            if (ranking.length > 10) ranking = ranking.slice(0, 10);
+            saveRanking();
+        }
+
+        // ========== FILTRO POR DÉCADA ==========
+        function filterTracksByDecade(tracksList) {
+            if (decadeFilter === 'all') return tracksList;
+            const minYear = decadeFilter === '80s' ? 1980 : 1990;
+            const maxYear = decadeFilter === '80s' ? 1989 : 1999;
+            return tracksList.filter(t => t.year && t.year >= minYear && t.year <= maxYear);
+        }
+
+        // ========== FUNCIONES DEL JUEGO ==========
+        function resetGame() {
+            teams = [
+                { name: 'Azul', color: 'blue', score: 0, jokers: { skip: 3 } },
+                { name: 'Rojo', color: 'red', score: 0, jokers: { skip: 3 } }
+            ];
+            currentTeamIndex = 0;
+            round = 0;
+            currentTrack = null;
+            options = [];
+            correctIndex = -1;
+            answerLocked = false;
+            usedTrackIds.clear();
+            if (playTimeout) clearTimeout(playTimeout);
+            gameAudio.pause();
+            gameAudio.currentTime = 0;
+            renderGame();
+        }
+
+        // Canciones válidas (con título y artista)
+        function getValidTracks() {
+            let valid = tracks.filter(t => t.title && t.title.trim() !== '' && t.artist && t.artist.trim() !== '');
+            return filterTracksByDecade(valid);
+        }
+
+        // Seleccionar canción aleatoria NO repetida
+        function pickRandomTrack() {
+            let valid = getValidTracks().filter(t => !usedTrackIds.has(t.id));
+            if (valid.length === 0) {
+                // Si ya no quedan, reiniciamos el set de usadas (nueva partida virtual)
+                usedTrackIds.clear();
+                valid = getValidTracks();
+                if (valid.length === 0) return null;
+            }
+            const track = valid[Math.floor(Math.random() * valid.length)];
+            usedTrackIds.add(track.id);
+            return track;
+        }
+
+        // Generar opciones
+        function generateOptions(track) {
+            if (!track) return;
+            const otherTitles = getValidTracks()
+                .filter(t => t.id !== track.id && t.title && t.title.trim() !== '')
+                .map(t => t.title)
+                .filter((v, i, a) => a.indexOf(v) === i);
+            let incorrects = shuffleArray(otherTitles).slice(0, 3);
+            while (incorrects.length < 3) incorrects.push('¿?');
+            let opts = [
+                { text: track.title, correct: true },
+                { text: incorrects[0], correct: false },
+                { text: incorrects[1], correct: false },
+                { text: incorrects[2], correct: false }
+            ];
+            options = shuffleArray(opts);
+            correctIndex = options.findIndex(o => o.correct);
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        // Cambiar equipo
+        function nextTeam() {
+            currentTeamIndex = (currentTeamIndex + 1) % teams.length;
+            if (currentTeamIndex === 0) round++;
+            answerLocked = false;
+            renderGame();
+        }
+
+        // Fin del juego
+        function checkGameOver() {
+            if (round >= maxRounds) {
+                const winner = teams.reduce((a, b) => (a.score > b.score ? a : b));
+                if (confirm(`¡Juego terminado! El ganador es equipo ${winner.name} con ${winner.score} puntos. ¿Guardar en ranking?`)) {
+                    const name = prompt('Nombre para el ranking:', winner.name);
+                    if (name) addRankingEntry(name, winner.score);
+                }
+                resetGame();
+                return true;
+            }
+            return false;
+        }
+
+        // ========== REPRODUCCIÓN ==========
+        function playFragment() {
+            if (!currentTrack || !currentTrack.url) return;
+            if (playTimeout) clearTimeout(playTimeout);
+            gameAudio.src = currentTrack.url;
+            gameAudio.preload = 'metadata';
+            gameAudio.onloadedmetadata = () => {
+                const total = gameAudio.duration;
+                if (fragmentDuration === 0) {
+                    // Canción completa
+                    gameAudio.currentTime = 0;
+                    gameAudio.play();
+                    // No hay timeout
+                } else {
+                    const minOffset = 20;
+                    const maxOffset = Math.max(minOffset, total - minOffset - fragmentDuration);
+                    if (maxOffset <= minOffset) {
+                        gameAudio.currentTime = 0;
+                    } else {
+                        const offset = Math.random() * (maxOffset - minOffset) + minOffset;
+                        gameAudio.currentTime = offset;
+                    }
+                    gameAudio.play();
+                    playTimeout = setTimeout(() => {
+                        gameAudio.pause();
+                        gameAudio.currentTime = 0;
+                    }, fragmentDuration * 1000);
+                }
+            };
+            gameAudio.onerror = () => {
+                gameAudio.currentTime = 0;
+                gameAudio.play();
+                if (fragmentDuration > 0) {
+                    playTimeout = setTimeout(() => {
+                        gameAudio.pause();
+                        gameAudio.currentTime = 0;
+                    }, fragmentDuration * 1000);
+                }
+            };
+        }
+
+        // ========== COMODINES (solo skip) ==========
+        function useSkip() {
+            if (answerLocked || !currentTrack) return;
+            const team = teams[currentTeamIndex];
+            if (team.jokers.skip <= 0) return;
+            team.jokers.skip--;
+            startNewRound();
+        }
+
+        // ========== NUEVA RONDA ==========
+        function startNewRound() {
+            if (checkGameOver()) return;
+            const track = pickRandomTrack();
+            if (!track) {
+                alert('No hay canciones disponibles para la década seleccionada.');
+                return;
+            }
+            currentTrack = track;
+            generateOptions(track);
+            answerLocked = false;
+            renderGame();
+            // No reproducir automáticamente, el equipo debe presionar el botón
+        }
+
+        // ========== MANEJAR RESPUESTA ==========
+        function handleAnswer(selectedIdx) {
+            if (answerLocked || !currentTrack) return;
+            answerLocked = true;
+            const isCorrect = (selectedIdx === correctIndex);
+            const team = teams[currentTeamIndex];
+
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correctIndex) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                team.score += 1;
+                document.getElementById('feedback').innerHTML = '✅ ¡Correcto! +1 punto';
+                // Lanzar confeti
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                document.getElementById('feedback').innerHTML = '❌ Incorrecto.';
+                // Lanzar emojis de error
+                for (let i = 0; i < 15; i++) {
+                    setTimeout(() => {
+                        const emoji = document.createElement('div');
+                        emoji.className = 'emoji';
+                        emoji.style.left = Math.random() * 100 + '%';
+                        emoji.style.top = '-10%';
+                        emoji.style.animationDuration = (2 + Math.random() * 2) + 's';
+                        emoji.textContent = ['👎', '😢', '💔', '😞'][Math.floor(Math.random() * 4)];
+                        emojiRainDiv.appendChild(emoji);
+                        setTimeout(() => emoji.remove(), 3000);
+                    }, i * 100);
+                }
+            }
+
+            // Mostrar el título de la canción después de responder
+            const titleReveal = document.createElement('div');
+            titleReveal.className = 'revealed-title';
+            titleReveal.innerHTML = `🎵 ${currentTrack.title} - ${currentTrack.artist}`;
+            document.querySelector('.feedback-area').appendChild(titleReveal);
+
+            renderGame(); // actualiza puntuaciones
+
+            setTimeout(() => {
+                nextTeam();
+                // Limpiar feedback y título revelado
+                document.getElementById('feedback').innerHTML = '';
+                if (!checkGameOver()) {
+                    startNewRound();
+                }
+            }, 3000);
+        }
+
+        // ========== RENDERIZAR INTERFAZ ==========
+        function renderGame() {
+            const team = teams[currentTeamIndex];
+            let html = `
+                <!-- Configuración -->
+                <div class="config-bar">
+                    <div class="config-item">
+                        <label>Duración:</label>
+                        <select id="fragment-duration">
+                            <option value="10" ${fragmentDuration === 10 ? 'selected' : ''}>10s</option>
+                            <option value="30" ${fragmentDuration === 30 ? 'selected' : ''}>30s</option>
+                            <option value="0" ${fragmentDuration === 0 ? 'selected' : ''}>Completa</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label>Década:</label>
+                        <select id="decade-filter">
+                            <option value="all" ${decadeFilter === 'all' ? 'selected' : ''}>Todas</option>
+                            <option value="80s" ${decadeFilter === '80s' ? 'selected' : ''}>80s</option>
+                            <option value="90s" ${decadeFilter === '90s' ? 'selected' : ''}>90s</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Equipos -->
+                <div class="teams-container">
+            `;
+            teams.forEach((t, idx) => {
+                html += `
+                    <div class="team-card ${t.color} ${idx === currentTeamIndex ? 'current' : ''}">
+                        <div class="team-name ${t.color}">${t.name}</div>
+                        <div class="team-score">${t.score}</div>
+                        <div class="team-jokers">
+                            🔄 ${t.jokers.skip} saltos
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            html += `<div class="round-info">Ronda ${round} / ${maxRounds}</div>`;
+
+            // Botón de reproducción con el equipo actual
+            html += `
+                <div class="play-button-container">
+                    <button class="play-team-btn ${team.color}" id="play-fragment-btn">
+                        🎤 ADELANTE EQUIPO ${team.name.toUpperCase()}
+                    </button>
+                </div>
+            `;
+
+            // Opciones (A, B, C, D)
+            if (options.length > 0) {
+                html += `<div class="options-grid">`;
+                const letters = ['A', 'B', 'C', 'D'];
+                options.forEach((opt, idx) => {
+                    html += `
+                        <button class="option-btn" data-option="${idx}" ${answerLocked ? 'disabled' : ''}>
+                            <span class="option-letter">${letters[idx]}</span>
+                            <span>${opt.text}</span>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // Feedback (donde aparecerá el título después de responder)
+            html += `<div id="feedback" class="feedback-area"></div>`;
+
+            // Comodines (solo saltar)
+            html += `<div class="jokers-area">`;
+            html += `
+                <button class="joker-btn" id="joker-skip" ${team.jokers.skip === 0 || answerLocked || !currentTrack ? 'disabled' : ''}>🔄 Saltar (${team.jokers.skip})</button>
+            `;
+            html += `</div>`;
+
+            // Ranking
+            html += `<div class="ranking-area"><h3>🏆 Ranking</h3><div class="ranking-list">`;
+            ranking.slice(0, 5).forEach((entry, i) => {
+                html += `<div class="ranking-item">${i+1}. ${entry.name}: ${entry.score}</div>`;
+            });
+            html += `</div></div>`;
+
+            // Botones de control
+            html += `<div style="margin-top:20px;">`;
+            html += `<button class="button" id="new-round-btn">🎲 Nueva Canción</button>`;
+            html += `<button class="button" id="reset-game-btn">🔄 Reiniciar Juego</button>`;
+            html += `</div>`;
+
+            contentDiv.innerHTML = html;
+
+            // Eventos
+            document.getElementById('fragment-duration').addEventListener('change', (e) => {
+                fragmentDuration = parseInt(e.target.value);
+            });
+            document.getElementById('decade-filter').addEventListener('change', (e) => {
+                decadeFilter = e.target.value;
+            });
+
+            // Botón reproducir
+            document.getElementById('play-fragment-btn').addEventListener('click', playFragment);
+
+            // Opciones
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.currentTarget.dataset.option;
+                    handleAnswer(parseInt(idx));
+                });
+            });
+
+            // Comodín skip
+            document.getElementById('joker-skip')?.addEventListener('click', useSkip);
+
+            // Nueva ronda
+            document.getElementById('new-round-btn').addEventListener('click', () => {
+                if (!answerLocked) startNewRound();
+            });
+
+            // Reiniciar
+            document.getElementById('reset-game-btn').addEventListener('click', () => {
+                if (confirm('¿Reiniciar el juego? Se perderán las puntuaciones actuales.')) {
+                    resetGame();
+                }
+            });
+        }
+
+        // ========== INICIALIZACIÓN ==========
+        async function initGame() {
+            try {
+                await openDB();
+                tracks = await loadTracks();
+                loadRanking();
+                if (tracks.length === 0) {
+                    contentDiv.innerHTML = `
+                        <p class="status">❌ No hay canciones en la biblioteca.</p>
+                        <p>Ve al <a href="index.html" style="color:#ffd966;">reproductor</a> y carga música.</p>
+                    `;
+                } else {
+                    resetGame(); // Esto ya llama a renderGame y empieza
+                }
+            } catch (e) {
+                console.error(e);
+                contentDiv.innerHTML = `<p class="status">Error al cargar la biblioteca.</p>`;
+            }
+        }
+
+        initGame();
+    })();
+</script>
+</body>
+</html>
