@@ -1,0 +1,1515 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SPOTYGAME · La batalla musical</title>
+    <link rel="icon" type="image/png" href="docs/fav_icon.png">
+    <!-- Librería para confeti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1"></script>
+    <style>
+        /* ========== ESTILOS GENERALES ========== */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('img/fondo.png') no-repeat center center fixed;
+            background-size: cover;
+            color: #eee;
+            padding: 16px;
+            min-height: 100vh;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(5px);
+            border-radius: 60px;
+            border: 4px solid #ffd966;
+            padding: 30px;
+            box-shadow: 0 0 40px #ffd966;
+        }
+
+        /* ========== HEADER ========== */
+        .header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #ffd966;
+            font-size: 3rem;
+            margin: 0;
+            text-shadow: 0 0 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #ffd966;
+            font-size: 1.5rem;
+            margin: 5px 0 0;
+            opacity: 0.9;
+        }
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .language-selector {
+            background: rgba(0,0,0,0.5);
+            border-radius: 40px;
+            padding: 5px 15px;
+            border: 2px solid #ffd966;
+            color: #ffd966;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .language-selector select {
+            background: transparent;
+            border: none;
+            color: #ffd966;
+            font-weight: bold;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+        }
+        .language-selector option {
+            background: #000;
+            color: #fff;
+        }
+        /* Mejora visual del selector de modo */
+        .mode-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(145deg, #ffd966, #cc9c33);
+            border-radius: 40px;
+            padding: 5px 20px;
+            border: 2px solid #b8860b;
+            box-shadow: 0 0 15px #ffd966;
+        }
+        .mode-selector label {
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+        .mode-selector select {
+            background: transparent;
+            border: none;
+            color: #000;
+            font-weight: bold;
+            font-size: 1rem;
+            outline: none;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 30px;
+        }
+        .mode-selector option {
+            background: #333;
+            color: #fff;
+        }
+        .back-link {
+            color: #ffd966;
+            text-decoration: none;
+            font-size: 1.2rem;
+            margin-left: auto;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Botón para cargar carpeta de soundtracks (visible solo en modo película) */
+        .movie-folder-btn {
+            background: #ffd966;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px auto 0;
+            display: inline-block;
+            border: 2px solid #b8860b;
+        }
+        .movie-folder-btn.hidden {
+            display: none;
+        }
+
+        /* Selector de tipo de pregunta para Hitster (solo visible en modo Hitster) */
+        .hitster-options {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 15px 0;
+            background: rgba(0,0,0,0.4);
+            border-radius: 40px;
+            padding: 10px;
+            border: 1px solid #ffd966;
+        }
+        .hitster-options label {
+            color: #ffd966;
+            font-weight: bold;
+        }
+        .hitster-options select {
+            background: #333;
+            color: #fff;
+            border: 1px solid #ffd966;
+            border-radius: 30px;
+            padding: 5px 10px;
+            font-size: 1rem;
+            outline: none;
+        }
+        .hidden {
+            display: none !important;
+        }
+
+        /* ========== PANEL DE JUEGO ========== */
+        .game-panel {
+            text-align: center;
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 20px 0;
+            color: #ccc;
+        }
+        .button {
+            background: #ffd966;
+            color: #000;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            cursor: pointer;
+            margin: 10px;
+            border: 2px solid #b8860b;
+            transition: transform 0.1s;
+        }
+        .button:hover {
+            transform: scale(1.05);
+        }
+        .button:disabled {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+
+        /* Barra de configuración (dificultad, década) */
+        .config-bar {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            background: rgba(0,0,0,0.4);
+            border-radius: 40px;
+            padding: 15px;
+            margin: 15px 0;
+            border: 1px solid #ffd966;
+        }
+        .config-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .config-item label {
+            color: #ffd966;
+            font-weight: bold;
+        }
+        .config-item select {
+            background: #333;
+            color: #fff;
+            border: 1px solid #ffd966;
+            border-radius: 30px;
+            padding: 8px 15px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        /* Jugadores/Equipos */
+        .players-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .player-card {
+            background: rgba(0,0,0,0.5);
+            border: 2px solid;
+            border-radius: 40px;
+            padding: 15px 20px;
+            min-width: 120px;
+            text-align: center;
+        }
+        .player-card.blue {
+            border-color: #3a86ff;
+            box-shadow: 0 0 15px #3a86ff;
+        }
+        .player-card.red {
+            border-color: #ff006e;
+            box-shadow: 0 0 15px #ff006e;
+        }
+        .player-card.green {
+            border-color: #38b000;
+            box-shadow: 0 0 15px #38b000;
+        }
+        .player-card.yellow {
+            border-color: #ffd966;
+            box-shadow: 0 0 15px #ffd966;
+        }
+        .player-card.purple {
+            border-color: #9d4edd;
+            box-shadow: 0 0 15px #9d4edd;
+        }
+        .player-card.orange {
+            border-color: #fb5607;
+            box-shadow: 0 0 15px #fb5607;
+        }
+        .player-card.current {
+            border-width: 4px;
+        }
+        .player-name {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        .player-name.blue { color: #3a86ff; }
+        .player-name.red { color: #ff006e; }
+        .player-name.green { color: #38b000; }
+        .player-name.yellow { color: #ffd966; }
+        .player-name.purple { color: #9d4edd; }
+        .player-name.orange { color: #fb5607; }
+        .player-score {
+            font-size: 2rem;
+            margin: 5px 0;
+        }
+        .player-jokers {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+
+        /* Botón de reproducción con indicador de jugador */
+        .play-button-container {
+            margin: 20px 0;
+        }
+        .play-player-btn {
+            background: linear-gradient(145deg, #ffd966, #cc9c33);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 60px;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            border: 2px solid #b8860b;
+            transition: 0.2s;
+            box-shadow: 0 0 20px #ffd966;
+        }
+        .play-player-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px #ffd966;
+        }
+        .play-player-btn.blue {
+            background: linear-gradient(145deg, #3a86ff, #1a4d8c);
+            color: white;
+            border-color: #1a4d8c;
+            box-shadow: 0 0 20px #3a86ff;
+        }
+        .play-player-btn.red {
+            background: linear-gradient(145deg, #ff006e, #a00045);
+            color: white;
+            border-color: #a00045;
+            box-shadow: 0 0 20px #ff006e;
+        }
+        .play-player-btn.green {
+            background: linear-gradient(145deg, #38b000, #1e7000);
+            color: white;
+            border-color: #1e7000;
+            box-shadow: 0 0 20px #38b000;
+        }
+        .play-player-btn.yellow {
+            background: linear-gradient(145deg, #ffd966, #cc9c33);
+            color: black;
+            border-color: #cc9c33;
+            box-shadow: 0 0 20px #ffd966;
+        }
+        .play-player-btn.purple {
+            background: linear-gradient(145deg, #9d4edd, #5a2a8a);
+            color: white;
+            border-color: #5a2a8a;
+            box-shadow: 0 0 20px #9d4edd;
+        }
+        .play-player-btn.orange {
+            background: linear-gradient(145deg, #fb5607, #b03e00);
+            color: white;
+            border-color: #b03e00;
+            box-shadow: 0 0 20px #fb5607;
+        }
+
+        /* Barra de progreso del fragmento */
+        .progress-container {
+            margin: 15px 0;
+            height: 20px;
+            background: #333;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid #ffd966;
+        }
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ffd966, #ffaa33);
+            transition: width 0.1s linear;
+        }
+
+        /* Opciones múltiples (A, B, C, D) */
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin: 25px 0;
+        }
+        .option-btn {
+            background: #333;
+            border: 2px solid #555;
+            border-radius: 60px;
+            padding: 15px;
+            font-size: 1.2rem;
+            color: #fff;
+            cursor: pointer;
+            transition: 0.1s;
+            text-align: left;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .option-letter {
+            background: #ffd966;
+            color: #000;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+        .option-btn:hover:not(:disabled) {
+            background: #444;
+            border-color: #ffd966;
+        }
+        .option-btn.correct {
+            background: #38b000;
+            border-color: #fff;
+        }
+        .option-btn.incorrect {
+            background: #d00000;
+            border-color: #fff;
+        }
+        .option-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Feedback y título (oculto hasta después de responder) */
+        .feedback-area {
+            min-height: 60px;
+            font-size: 1.3rem;
+            margin: 15px 0;
+        }
+        .revealed-info {
+            background: rgba(255, 217, 102, 0.2);
+            border-radius: 40px;
+            padding: 10px;
+            font-size: 1.3rem;
+            color: #ffd966;
+            margin: 10px 0;
+        }
+
+        /* Comodines (skip y fifty) */
+        .jokers-area {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .joker-btn {
+            background: #2a2a2a;
+            border: 2px solid #ffd966;
+            border-radius: 40px;
+            padding: 10px 20px;
+            color: #ffd966;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .joker-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            border-color: #666;
+        }
+
+        /* Contenedor para emojis de error */
+        .emoji-rain {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+        .emoji {
+            position: absolute;
+            font-size: 2rem;
+            animation: fall 3s linear forwards;
+        }
+        @keyframes fall {
+            to { transform: translateY(100vh); opacity: 0; }
+        }
+
+        /* Info de ronda */
+        .round-info {
+            font-size: 1.3rem;
+            color: #ffd966;
+            margin: 15px 0;
+        }
+
+        /* Ranking */
+        .ranking-area {
+            margin-top: 30px;
+            border-top: 1px solid #555;
+            padding-top: 20px;
+        }
+        .ranking-area h3 {
+            color: #ffd966;
+        }
+        .ranking-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            justify-content: center;
+        }
+        .ranking-item {
+            background: #222;
+            padding: 8px 15px;
+            border-radius: 30px;
+            border-left: 5px solid #ffd966;
+        }
+
+        /* Botón para añadir jugadores en modo Hitster */
+        .add-player-btn {
+            background: #ffd966;
+            color: #000;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 10px auto;
+            display: inline-block;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>SPOTYGAME</h1>
+        <div class="subtitle" id="subtitle">La batalla musical</div>
+        <div class="top-bar">
+            <div class="language-selector">
+                <select id="language-select">
+                    <option value="es" selected>🇪🇸 Español</option>
+                    <option value="en">🇬🇧 English</option>
+                    <option value="de">🇩🇪 Deutsch</option>
+                </select>
+            </div>
+            <div class="mode-selector">
+                <label for="mode-select">Modo de juego:</label>
+                <select id="mode-select">
+                    <option value="team" selected>Batalla musical por equipos</option>
+                    <option value="movie">Adivina la película</option>
+                    <option value="hitster">Hitster (varios jugadores)</option>
+                </select>
+            </div>
+            <a href="index.html" class="back-link">← <span data-i18n="back">Volver al reproductor</span></a>
+        </div>
+        <!-- Botón para cargar carpeta de soundtracks (visible solo en modo película) -->
+        <button id="movie-folder-btn" class="movie-folder-btn hidden">📁 Seleccionar carpeta de soundtracks</button>
+        <!-- Selector de tipo de pregunta para Hitster (solo visible en modo Hitster) -->
+        <div id="hitster-options" class="hitster-options hidden">
+            <label for="hitster-question-type">Preguntar por:</label>
+            <select id="hitster-question-type">
+                <option value="song+artist" selected>Canción + Artista</option>
+                <option value="song">Solo canción</option>
+                <option value="year">Año</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="game-content" class="game-panel">
+        <!-- El contenido se genera dinámicamente -->
+    </div>
+</div>
+
+<!-- Contenedor para emojis de error -->
+<div id="emoji-rain" class="emoji-rain"></div>
+
+<script>
+    (function() {
+        // ========== TRADUCCIONES ==========
+        const translations = {
+            es: {
+                mode_team: "Batalla musical por equipos",
+                mode_movie: "Adivina la película",
+                mode_hitster: "Hitster (varios jugadores)",
+                back: "Volver al reproductor",
+                team_blue: "Azul",
+                team_red: "Rojo",
+                player: "Jugador",
+                score: "Puntuación",
+                skip: "Saltar",
+                fifty: "50/50",
+                difficulty: "Dificultad",
+                easy: "Fácil (completa)",
+                medium: "Media (30s)",
+                hard: "Difícil (10s)",
+                decade: "Década",
+                all: "Todas",
+                round: "Ronda",
+                of: "de",
+                correct: "¡Correcto! +1 punto",
+                incorrect: "Incorrecto.",
+                play_turn: "ADELANTE",
+                new_round: "Nueva Canción",
+                reset: "Reiniciar Juego",
+                ranking: "Ranking",
+                no_songs: "No hay canciones en la biblioteca.",
+                load_songs: "Ve al reproductor y carga música.",
+                add_player: "Añadir jugador",
+                player_name: "Nombre del jugador",
+                win_message: "¡Juego terminado! El ganador es {name} con {score} puntos. ¿Guardar en ranking?",
+                save_ranking: "Nombre para el ranking:",
+                question_type: "Preguntar por:",
+                song_artist: "Canción + Artista",
+                song_only: "Solo canción",
+                year_only: "Año",
+                load_movie_folder: "Seleccionar carpeta de soundtracks",
+                movie_loaded: "Soundtracks cargados: {count}",
+            },
+            en: {
+                mode_team: "Team Battle",
+                mode_movie: "Movie Quiz",
+                mode_hitster: "Hitster (multiplayer)",
+                back: "Back to player",
+                team_blue: "Blue",
+                team_red: "Red",
+                player: "Player",
+                score: "Score",
+                skip: "Skip",
+                fifty: "50/50",
+                difficulty: "Difficulty",
+                easy: "Easy (full)",
+                medium: "Medium (30s)",
+                hard: "Hard (10s)",
+                decade: "Decade",
+                all: "All",
+                round: "Round",
+                of: "of",
+                correct: "Correct! +1 point",
+                incorrect: "Incorrect.",
+                play_turn: "GO",
+                new_round: "New Song",
+                reset: "Reset Game",
+                ranking: "Ranking",
+                no_songs: "No songs in library.",
+                load_songs: "Go to player and load music.",
+                add_player: "Add player",
+                player_name: "Player name",
+                win_message: "Game over! Winner is {name} with {score} points. Save to ranking?",
+                save_ranking: "Name for ranking:",
+                question_type: "Ask for:",
+                song_artist: "Song + Artist",
+                song_only: "Song only",
+                year_only: "Year",
+                load_movie_folder: "Select soundtrack folder",
+                movie_loaded: "Soundtracks loaded: {count}",
+            },
+            de: {
+                mode_team: "Team-Battle",
+                mode_movie: "Filmquiz",
+                mode_hitster: "Hitster (Mehrspieler)",
+                back: "Zurück zum Player",
+                team_blue: "Blau",
+                team_red: "Rot",
+                player: "Spieler",
+                score: "Punktzahl",
+                skip: "Überspringen",
+                fifty: "50/50",
+                difficulty: "Schwierigkeit",
+                easy: "Einfach (komplett)",
+                medium: "Mittel (30s)",
+                hard: "Schwer (10s)",
+                decade: "Jahrzehnt",
+                all: "Alle",
+                round: "Runde",
+                of: "von",
+                correct: "Richtig! +1 Punkt",
+                incorrect: "Falsch.",
+                play_turn: "LOS",
+                new_round: "Neues Lied",
+                reset: "Spiel zurücksetzen",
+                ranking: "Rangliste",
+                no_songs: "Keine Lieder in der Bibliothek.",
+                load_songs: "Gehe zum Player und lade Musik.",
+                add_player: "Spieler hinzufügen",
+                player_name: "Spielername",
+                win_message: "Spiel vorbei! Gewinner ist {name} mit {score} Punkten. In Rangliste speichern?",
+                save_ranking: "Name für Rangliste:",
+                question_type: "Fragen nach:",
+                song_artist: "Lied + Künstler",
+                song_only: "Nur Lied",
+                year_only: "Jahr",
+                load_movie_folder: "Soundtrack-Ordner auswählen",
+                movie_loaded: "Soundtracks geladen: {count}",
+            }
+        };
+
+        // ========== CONFIGURACIÓN ==========
+        const DB_NAME = 'SpotyboxDB';
+        const DB_VERSION = 2;
+        const STORE_NAME = 'canciones';
+
+        let db = null;
+        let tracks = []; // Todas las canciones de la biblioteca (con url)
+        let movieTracks = []; // Canciones específicas para modo película (soundtracks)
+
+        // Modo de juego actual
+        let currentMode = 'team'; // 'team', 'movie', 'hitster'
+
+        // Tipo de pregunta para Hitster
+        let hitsterQuestionType = 'song+artist'; // 'song+artist', 'song', 'year'
+
+        // Jugadores (para modo team y hitster)
+        let players = [];
+
+        // Para modo team, colores predefinidos
+        const teamColors = ['blue', 'red'];
+        // Para modo hitster, colores variados
+        const playerColors = ['blue', 'red', 'green', 'yellow', 'purple', 'orange'];
+
+        let currentPlayerIndex = 0;
+        let round = 0;
+        const maxRounds = 10;
+
+        let currentTrack = null;
+        let options = [];
+        let correctIndex = -1;
+        let answerLocked = false;
+        let usedTrackIds = new Set();
+
+        // Configuración
+        let difficulty = 'medium'; // 'easy', 'medium', 'hard'
+        let decadeFilter = 'all';   // '80s', '90s', 'all'
+
+        // Mapeo dificultad a segundos
+        function getFragmentDuration() {
+            if (difficulty === 'easy') return 0; // completa
+            if (difficulty === 'medium') return 30;
+            return 10; // hard
+        }
+
+        // Objeto Audio para el juego
+        const gameAudio = new Audio();
+        let playTimeout = null;
+        let progressInterval = null;
+
+        // Ranking
+        let ranking = [];
+
+        // Elementos DOM
+        let contentDiv = document.getElementById('game-content');
+        let emojiRainDiv = document.getElementById('emoji-rain');
+        let languageSelect = document.getElementById('language-select');
+        let modeSelect = document.getElementById('mode-select');
+        let movieFolderBtn = document.getElementById('movie-folder-btn');
+        let hitsterOptionsDiv = document.getElementById('hitster-options');
+        let hitsterQuestionSelect = document.getElementById('hitster-question-type');
+        let folderStatus = document.getElementById('folder-status'); // Podríamos añadir un span para estado
+
+        // ========== FUNCIONES DE TRADUCCIÓN ==========
+        function t(key, replacements = {}) {
+            let lang = languageSelect.value;
+            let text = translations[lang]?.[key] || translations['es'][key] || key;
+            for (let [k, v] of Object.entries(replacements)) {
+                text = text.replace(`{${k}}`, v);
+            }
+            return text;
+        }
+
+        function updateUITexts() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            document.getElementById('subtitle').textContent = 
+                currentMode === 'team' ? t('mode_team') : (currentMode === 'movie' ? t('mode_movie') : t('mode_hitster'));
+            // Actualizar texto del botón de carpeta
+            if (movieFolderBtn) {
+                movieFolderBtn.textContent = t('load_movie_folder');
+            }
+        }
+
+        languageSelect.addEventListener('change', updateUITexts);
+
+        // ========== FUNCIONES DE INDEXEDDB ==========
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    db = request.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (e) => {
+                    const db = e.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id' });
+                    }
+                };
+            });
+        }
+
+        async function loadTracks() {
+            return new Promise((resolve, reject) => {
+                const tx = db.transaction(STORE_NAME, 'readonly');
+                const store = tx.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    const loaded = request.result;
+                    loaded.forEach(t => {
+                        if (t.file) {
+                            t.url = URL.createObjectURL(t.file);
+                        }
+                    });
+                    resolve(loaded);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        // ========== RANKING ==========
+        function loadRanking() {
+            try {
+                ranking = JSON.parse(localStorage.getItem('gameRanking')) || [];
+            } catch(e) { ranking = []; }
+        }
+        function saveRanking() {
+            localStorage.setItem('gameRanking', JSON.stringify(ranking));
+        }
+        function addRankingEntry(name, score) {
+            ranking.push({ name, score, date: new Date().toISOString() });
+            ranking.sort((a, b) => b.score - a.score);
+            if (ranking.length > 10) ranking = ranking.slice(0, 10);
+            saveRanking();
+        }
+
+        // ========== FILTRO POR DÉCADA ==========
+        function filterTracksByDecade(tracksList) {
+            if (decadeFilter === 'all') return tracksList;
+            const minYear = decadeFilter === '80s' ? 1980 : 1990;
+            const maxYear = decadeFilter === '80s' ? 1989 : 1999;
+            return tracksList.filter(t => t.year && t.year >= minYear && t.year <= maxYear);
+        }
+
+        // ========== FUNCIONES DEL JUEGO SEGÚN MODO ==========
+        function resetGame() {
+            if (currentMode === 'team') {
+                players = [
+                    { name: t('team_blue'), color: 'blue', score: 0, jokers: { skip: 3, fifty: 3 } },
+                    { name: t('team_red'), color: 'red', score: 0, jokers: { skip: 3, fifty: 3 } }
+                ];
+            } else if (currentMode === 'movie') {
+                players = [
+                    { name: t('team_blue'), color: 'blue', score: 0, jokers: { skip: 3, fifty: 3 } },
+                    { name: t('team_red'), color: 'red', score: 0, jokers: { skip: 3, fifty: 3 } }
+                ];
+            } else if (currentMode === 'hitster') {
+                players = [
+                    { name: t('player') + ' 1', color: playerColors[0], score: 0, jokers: { skip: 3, fifty: 3 } },
+                    { name: t('player') + ' 2', color: playerColors[1], score: 0, jokers: { skip: 3, fifty: 3 } }
+                ];
+            }
+            currentPlayerIndex = 0;
+            round = 0;
+            currentTrack = null;
+            options = [];
+            correctIndex = -1;
+            answerLocked = false;
+            usedTrackIds.clear();
+            if (playTimeout) clearTimeout(playTimeout);
+            if (progressInterval) clearInterval(progressInterval);
+            gameAudio.pause();
+            gameAudio.currentTime = 0;
+            renderGame();
+        }
+
+        // Canciones válidas según modo
+        function getValidTracks() {
+            let sourceTracks = [];
+            if (currentMode === 'movie') {
+                // En modo película, usar movieTracks si hay, si no, usar tracks como fallback
+                sourceTracks = movieTracks.length > 0 ? movieTracks : tracks;
+            } else {
+                sourceTracks = tracks;
+            }
+            let valid = sourceTracks.filter(t => t.title && t.title.trim() !== '' && t.artist && t.artist.trim() !== '');
+            
+            // Si estamos en modo película, además deben tener álbum (nombre de la película)
+            if (currentMode === 'movie') {
+                valid = valid.filter(t => t.album && t.album.trim() !== '');
+            }
+            
+            return filterTracksByDecade(valid);
+        }
+
+        // Seleccionar canción aleatoria NO repetida
+        function pickRandomTrack() {
+            let valid = getValidTracks().filter(t => !usedTrackIds.has(t.id));
+            if (valid.length === 0) {
+                usedTrackIds.clear();
+                valid = getValidTracks();
+                if (valid.length === 0) return null;
+            }
+            const track = valid[Math.floor(Math.random() * valid.length)];
+            usedTrackIds.add(track.id);
+            return track;
+        }
+
+        // ========== GENERAR OPCIONES SEGÚN EL MODO ==========
+        function generateOptions(track) {
+            if (!track) return;
+            
+            if (currentMode === 'movie') {
+                // Usar el ÁLBUM como nombre de la película
+                let correctText = track.album;
+                // Obtener otros álbumes de canciones válidas (con álbum)
+                const otherAlbums = getValidTracks()
+                    .filter(t => t.id !== track.id)
+                    .map(t => t.album)
+                    .filter((v, i, a) => a.indexOf(v) === i); // únicos
+                let incorrects = shuffleArray(otherAlbums).slice(0, 3);
+                while (incorrects.length < 3) incorrects.push('¿?');
+                let opts = [
+                    { text: correctText, correct: true },
+                    { text: incorrects[0], correct: false },
+                    { text: incorrects[1], correct: false },
+                    { text: incorrects[2], correct: false }
+                ];
+                options = shuffleArray(opts);
+                correctIndex = options.findIndex(o => o.correct);
+                
+            } else if (currentMode === 'hitster') {
+                if (hitsterQuestionType === 'year') {
+                    const otherYears = getValidTracks()
+                        .filter(t => t.id !== track.id && t.year)
+                        .map(t => t.year)
+                        .filter((v, i, a) => a.indexOf(v) === i);
+                    let incorrects = shuffleArray(otherYears).slice(0, 3);
+                    while (incorrects.length < 3) {
+                        let randomYear = track.year + Math.floor(Math.random() * 10) - 5;
+                        if (randomYear > 1900 && randomYear < 2030 && !incorrects.includes(randomYear) && randomYear !== track.year) {
+                            incorrects.push(randomYear);
+                        } else {
+                            incorrects.push(track.year + (incorrects.length + 1));
+                        }
+                    }
+                    let opts = [
+                        { text: track.year?.toString() || '?', correct: true },
+                        { text: incorrects[0].toString(), correct: false },
+                        { text: incorrects[1].toString(), correct: false },
+                        { text: incorrects[2].toString(), correct: false }
+                    ];
+                    options = shuffleArray(opts);
+                    correctIndex = options.findIndex(o => o.correct);
+                } else if (hitsterQuestionType === 'song') {
+                    const otherTitles = getValidTracks()
+                        .filter(t => t.id !== track.id && t.title && t.title.trim() !== '')
+                        .map(t => t.title)
+                        .filter((v, i, a) => a.indexOf(v) === i);
+                    let incorrects = shuffleArray(otherTitles).slice(0, 3);
+                    while (incorrects.length < 3) incorrects.push('¿?');
+                    let opts = [
+                        { text: track.title, correct: true },
+                        { text: incorrects[0], correct: false },
+                        { text: incorrects[1], correct: false },
+                        { text: incorrects[2], correct: false }
+                    ];
+                    options = shuffleArray(opts);
+                    correctIndex = options.findIndex(o => o.correct);
+                } else { // song+artist
+                    const otherCombos = getValidTracks()
+                        .filter(t => t.id !== track.id && t.title && t.artist)
+                        .map(t => `${t.title} - ${t.artist}`)
+                        .filter((v, i, a) => a.indexOf(v) === i);
+                    let incorrects = shuffleArray(otherCombos).slice(0, 3);
+                    while (incorrects.length < 3) incorrects.push('¿?');
+                    let opts = [
+                        { text: `${track.title} - ${track.artist}`, correct: true },
+                        { text: incorrects[0], correct: false },
+                        { text: incorrects[1], correct: false },
+                        { text: incorrects[2], correct: false }
+                    ];
+                    options = shuffleArray(opts);
+                    correctIndex = options.findIndex(o => o.correct);
+                }
+            } else { // modo team (batalla musical)
+                const otherTitles = getValidTracks()
+                    .filter(t => t.id !== track.id && t.title && t.title.trim() !== '')
+                    .map(t => t.title)
+                    .filter((v, i, a) => a.indexOf(v) === i);
+                let incorrects = shuffleArray(otherTitles).slice(0, 3);
+                while (incorrects.length < 3) incorrects.push('¿?');
+                let opts = [
+                    { text: track.title, correct: true },
+                    { text: incorrects[0], correct: false },
+                    { text: incorrects[1], correct: false },
+                    { text: incorrects[2], correct: false }
+                ];
+                options = shuffleArray(opts);
+                correctIndex = options.findIndex(o => o.correct);
+            }
+        }
+
+        function shuffleArray(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function nextPlayer() {
+            currentPlayerIndex = (currentPlayerIndex + 1) % players.length;
+            if (currentPlayerIndex === 0) round++;
+            answerLocked = false;
+            renderGame();
+        }
+
+        function checkGameOver() {
+            if (round >= maxRounds) {
+                const winner = players.reduce((a, b) => (a.score > b.score ? a : b));
+                if (confirm(t('win_message', { name: winner.name, score: winner.score }))) {
+                    const name = prompt(t('save_ranking'), winner.name);
+                    if (name) addRankingEntry(name, winner.score);
+                }
+                resetGame();
+                return true;
+            }
+            return false;
+        }
+
+        // ========== REPRODUCCIÓN CON BARRA DE PROGRESO ==========
+        function playFragment() {
+            if (!currentTrack || !currentTrack.url) return;
+            if (playTimeout) clearTimeout(playTimeout);
+            if (progressInterval) clearInterval(progressInterval);
+            gameAudio.src = currentTrack.url;
+            gameAudio.preload = 'metadata';
+            gameAudio.onloadedmetadata = () => {
+                const total = gameAudio.duration;
+                let startTime = 0;
+                let durationSec = getFragmentDuration();
+                if (durationSec > 0) {
+                    const minOffset = 20;
+                    const maxOffset = Math.max(minOffset, total - minOffset - durationSec);
+                    if (maxOffset <= minOffset) {
+                        startTime = 0;
+                    } else {
+                        startTime = Math.random() * (maxOffset - minOffset) + minOffset;
+                    }
+                }
+                gameAudio.currentTime = startTime;
+                gameAudio.play();
+                const progressBar = document.getElementById('fragment-progress');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                    let start = Date.now();
+                    let duration = durationSec > 0 ? durationSec * 1000 : total * 1000;
+                    progressInterval = setInterval(() => {
+                        let elapsed = Date.now() - start;
+                        let percent = Math.min((elapsed / duration) * 100, 100);
+                        progressBar.style.width = percent + '%';
+                        if (elapsed >= duration) {
+                            clearInterval(progressInterval);
+                            progressBar.style.width = '100%';
+                        }
+                    }, 100);
+                }
+                if (durationSec > 0) {
+                    playTimeout = setTimeout(() => {
+                        gameAudio.pause();
+                        gameAudio.currentTime = 0;
+                        clearInterval(progressInterval);
+                    }, durationSec * 1000);
+                }
+            };
+            gameAudio.onerror = () => {
+                gameAudio.currentTime = 0;
+                gameAudio.play();
+                let durationSec = getFragmentDuration();
+                if (durationSec > 0) {
+                    playTimeout = setTimeout(() => {
+                        gameAudio.pause();
+                        gameAudio.currentTime = 0;
+                        clearInterval(progressInterval);
+                    }, durationSec * 1000);
+                }
+            };
+        }
+
+        // ========== COMODINES ==========
+        function useFifty() {
+            if (answerLocked || !currentTrack) return;
+            const player = players[currentPlayerIndex];
+            if (player.jokers.fifty <= 0) return;
+            player.jokers.fifty--;
+            
+            const btns = document.querySelectorAll('.option-btn');
+            if (btns.length < 4) return;
+            
+            const incorrectIndices = [];
+            options.forEach((opt, idx) => {
+                if (!opt.correct) incorrectIndices.push(idx);
+            });
+            
+            const toHide = shuffleArray([...incorrectIndices]).slice(0, 2);
+            
+            toHide.forEach(idx => {
+                btns[idx].disabled = true;
+                btns[idx].style.opacity = '0.3';
+                btns[idx].style.backgroundColor = '#555';
+            });
+            
+            const jokerFiftyBtn = document.getElementById('joker-fifty');
+            if (jokerFiftyBtn) {
+                jokerFiftyBtn.textContent = `⚖️ ${t('fifty')} (${player.jokers.fifty})`;
+                if (player.jokers.fifty === 0) jokerFiftyBtn.disabled = true;
+            }
+        }
+
+        function useSkip() {
+            if (answerLocked || !currentTrack) return;
+            const player = players[currentPlayerIndex];
+            if (player.jokers.skip <= 0) return;
+            player.jokers.skip--;
+            startNewRound();
+        }
+
+        // ========== NUEVA RONDA ==========
+        function startNewRound() {
+            if (checkGameOver()) return;
+            let track;
+            do {
+                track = pickRandomTrack();
+                if (!track) {
+                    alert(t('no_songs'));
+                    return;
+                }
+                // En modo película, aseguramos que tenga álbum (aunque el filtro ya lo hace)
+            } while (currentMode === 'movie' && (!track.album || track.album.trim() === ''));
+            currentTrack = track;
+            generateOptions(track);
+            answerLocked = false;
+            renderGame();
+        }
+
+        // ========== MANEJAR RESPUESTA ==========
+        function handleAnswer(selectedIdx) {
+            if (answerLocked || !currentTrack) return;
+            answerLocked = true;
+            const isCorrect = (selectedIdx === correctIndex);
+            const player = players[currentPlayerIndex];
+
+            const btns = document.querySelectorAll('.option-btn');
+            btns.forEach((btn, i) => {
+                btn.disabled = true;
+                if (i === correctIndex) {
+                    btn.classList.add('correct');
+                } else {
+                    btn.classList.add('incorrect');
+                }
+            });
+
+            if (isCorrect) {
+                player.score += 1;
+                document.getElementById('feedback').innerHTML = '✅ ' + t('correct');
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            } else {
+                document.getElementById('feedback').innerHTML = '❌ ' + t('incorrect');
+                for (let i = 0; i < 15; i++) {
+                    setTimeout(() => {
+                        const emoji = document.createElement('div');
+                        emoji.className = 'emoji';
+                        emoji.style.left = Math.random() * 100 + '%';
+                        emoji.style.top = '-10%';
+                        emoji.style.animationDuration = (2 + Math.random() * 2) + 's';
+                        emoji.textContent = ['👎', '😢', '💔', '😞'][Math.floor(Math.random() * 4)];
+                        emojiRainDiv.appendChild(emoji);
+                        setTimeout(() => emoji.remove(), 3000);
+                    }, i * 100);
+                }
+            }
+
+            // Mostrar información revelada según modo
+            let revealedText = '';
+            if (currentMode === 'movie') {
+                revealedText = `🎬 ${currentTrack.album} - ${currentTrack.artist}`;
+            } else if (currentMode === 'hitster') {
+                if (hitsterQuestionType === 'year') {
+                    revealedText = `📅 ${currentTrack.title} - ${currentTrack.artist} (${currentTrack.year || '?'})`;
+                } else {
+                    revealedText = `🎵 ${currentTrack.title} - ${currentTrack.artist}`;
+                }
+            } else {
+                revealedText = `🎵 ${currentTrack.title} - ${currentTrack.artist}`;
+            }
+            const titleReveal = document.createElement('div');
+            titleReveal.className = 'revealed-info';
+            titleReveal.innerHTML = revealedText;
+            document.querySelector('.feedback-area').appendChild(titleReveal);
+
+            // Actualizar puntuaciones y UI (sin reiniciar la ronda todavía)
+            renderGame();
+
+            setTimeout(() => {
+                nextPlayer();
+                document.getElementById('feedback').innerHTML = '';
+                // Limpiar el título revelado si existe
+                const oldReveal = document.querySelector('.revealed-info');
+                if (oldReveal) oldReveal.remove();
+                if (!checkGameOver()) {
+                    startNewRound();
+                }
+            }, 3000);
+        }
+
+        // ========== AÑADIR JUGADOR (para modo hitster) ==========
+        function addPlayer() {
+            if (players.length >= playerColors.length) {
+                alert('Máximo de jugadores alcanzado');
+                return;
+            }
+            let name = prompt(t('player_name'), t('player') + ' ' + (players.length + 1));
+            if (!name) return;
+            players.push({
+                name: name,
+                color: playerColors[players.length],
+                score: 0,
+                jokers: { skip: 3, fifty: 3 }
+            });
+            renderGame();
+        }
+
+        // ========== PROCESAR CARPETA DE SOUNDTRACKS ==========
+        async function loadMovieFolder(files) {
+            const mp3Files = Array.from(files).filter(f => f.name.toLowerCase().endsWith('.mp3'));
+            if (mp3Files.length === 0) return;
+            // Mostrar estado (podríamos añadir un elemento)
+            let processed = 0;
+            movieTracks = [];
+            for (const file of mp3Files) {
+                try {
+                    const track = await processMovieFile(file);
+                    track.url = URL.createObjectURL(file);
+                    movieTracks.push(track);
+                    processed++;
+                } catch (e) {
+                    console.warn('Error procesando', file.name, e);
+                }
+            }
+            alert(t('movie_loaded', { count: processed }));
+            // Reiniciar el juego para que use la nueva lista
+            if (currentMode === 'movie') {
+                resetGame();
+            }
+        }
+
+        // Función para procesar un archivo con worker (similar a la del reproductor)
+        function processMovieFile(file) {
+            return new Promise((resolve, reject) => {
+                const worker = new Worker(URL.createObjectURL(new Blob([`
+                    self.importScripts('https://unpkg.com/jsmediatags@3.9.7/dist/jsmediatags.min.js');
+                    self.onmessage = function(e) {
+                        const file = e.data;
+                        jsmediatags.read(file, {
+                            onSuccess: function(tag) {
+                                const tags = tag.tags;
+                                const title = tags.title || file.name.replace(/\\.[^/.]+$/, '');
+                                const artist = tags.artist || '';
+                                const album = tags.album || '';
+                                let year = null;
+                                if (tags.year) year = tags.year;
+                                else if (tags.TYER) year = tags.TYER;
+                                else if (tags.TDRC) year = tags.TDRC;
+                                if (year && typeof year === 'string') year = parseInt(year.replace(/\\D/g, '')) || null;
+                                const genre = tags.genre || tags.TCON || '';
+                                let coverBlob = null;
+                                if (tags.picture) {
+                                    const pic = tags.picture;
+                                    const bytes = new Uint8Array(pic.data);
+                                    coverBlob = new Blob([bytes], { type: pic.format });
+                                }
+                                const track = {
+                                    id: file.name + Date.now() + Math.random(),
+                                    file: file,
+                                    title: title,
+                                    artist: artist,
+                                    album: album,
+                                    year: year,
+                                    genre: genre,
+                                    cover: coverBlob
+                                };
+                                self.postMessage({ success: true, track: track, fileName: file.name });
+                            },
+                            onError: function() {
+                                const track = {
+                                    id: file.name + Date.now() + Math.random(),
+                                    file: file,
+                                    title: file.name.replace(/\\.[^/.]+$/, ''),
+                                    artist: '',
+                                    album: '',
+                                    year: null,
+                                    genre: '',
+                                    cover: null
+                                };
+                                self.postMessage({ success: true, track: track, fileName: file.name });
+                            }
+                        });
+                    };
+                `], { type: 'application/javascript' })));
+                worker.onmessage = (e) => {
+                    worker.terminate();
+                    resolve(e.data.track);
+                };
+                worker.onerror = (e) => {
+                    worker.terminate();
+                    reject(e);
+                };
+                worker.postMessage(file);
+            });
+        }
+
+        // ========== EVENTO DEL BOTÓN DE CARPETA ==========
+        movieFolderBtn.addEventListener('click', () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.mp3';
+            input.multiple = true;
+            input.webkitdirectory = true;
+            input.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                loadMovieFolder(files);
+            };
+            input.click();
+        });
+
+        // ========== RENDERIZAR INTERFAZ ==========
+        function renderGame() {
+            const player = players[currentPlayerIndex];
+            let html = `
+                <div class="config-bar">
+                    <div class="config-item">
+                        <label data-i18n="difficulty">Dificultad:</label>
+                        <select id="difficulty-select">
+                            <option value="easy" ${difficulty === 'easy' ? 'selected' : ''} data-i18n="easy">Fácil (completa)</option>
+                            <option value="medium" ${difficulty === 'medium' ? 'selected' : ''} data-i18n="medium">Media (30s)</option>
+                            <option value="hard" ${difficulty === 'hard' ? 'selected' : ''} data-i18n="hard">Difícil (10s)</option>
+                        </select>
+                    </div>
+                    <div class="config-item">
+                        <label data-i18n="decade">Década:</label>
+                        <select id="decade-filter">
+                            <option value="all" ${decadeFilter === 'all' ? 'selected' : ''} data-i18n="all">Todas</option>
+                            <option value="80s" ${decadeFilter === '80s' ? 'selected' : ''}>80s</option>
+                            <option value="90s" ${decadeFilter === '90s' ? 'selected' : ''}>90s</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="players-container">
+            `;
+            players.forEach((p, idx) => {
+                html += `
+                    <div class="player-card ${p.color} ${idx === currentPlayerIndex ? 'current' : ''}">
+                        <div class="player-name ${p.color}">${p.name}</div>
+                        <div class="player-score">${p.score}</div>
+                        <div class="player-jokers">
+                            🔄 ${p.jokers.skip} | ⚖️ ${p.jokers.fifty}
+                        </div>
+                    </div>
+                `;
+            });
+            html += `</div>`;
+
+            if (currentMode === 'hitster' && players.length < playerColors.length) {
+                html += `<button class="add-player-btn" id="add-player-btn" data-i18n="add_player">Añadir jugador</button>`;
+            }
+
+            html += `<div class="round-info">${t('round')} ${round} / ${maxRounds}</div>`;
+
+            html += `
+                <div class="play-button-container">
+                    <button class="play-player-btn ${player.color}" id="play-fragment-btn">
+                        🎤 ${t('play_turn')} ${player.name.toUpperCase()}
+                    </button>
+                </div>
+            `;
+
+            html += `
+                <div class="progress-container">
+                    <div id="fragment-progress" class="progress-bar"></div>
+                </div>
+            `;
+
+            if (options.length > 0) {
+                html += `<div class="options-grid">`;
+                const letters = ['A', 'B', 'C', 'D'];
+                options.forEach((opt, idx) => {
+                    html += `
+                        <button class="option-btn" data-option="${idx}" ${answerLocked ? 'disabled' : ''}>
+                            <span class="option-letter">${letters[idx]}</span>
+                            <span>${opt.text}</span>
+                        </button>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `<div id="feedback" class="feedback-area"></div>`;
+
+            html += `<div class="jokers-area">`;
+            html += `
+                <button class="joker-btn" id="joker-skip" ${player.jokers.skip === 0 || answerLocked || !currentTrack ? 'disabled' : ''}>🔄 ${t('skip')} (${player.jokers.skip})</button>
+                <button class="joker-btn" id="joker-fifty" ${player.jokers.fifty === 0 || answerLocked || !currentTrack ? 'disabled' : ''}>⚖️ ${t('fifty')} (${player.jokers.fifty})</button>
+            `;
+            html += `</div>`;
+
+            html += `<div class="ranking-area"><h3 data-i18n="ranking">🏆 Ranking</h3><div class="ranking-list">`;
+            ranking.slice(0, 5).forEach((entry, i) => {
+                html += `<div class="ranking-item">${i+1}. ${entry.name}: ${entry.score}</div>`;
+            });
+            html += `</div></div>`;
+
+            html += `<div style="margin-top:20px;">`;
+            html += `<button class="button" id="new-round-btn" data-i18n="new_round">🎲 Nueva Canción</button>`;
+            html += `<button class="button" id="reset-game-btn" data-i18n="reset">🔄 Reiniciar Juego</button>`;
+            html += `</div>`;
+
+            contentDiv.innerHTML = html;
+
+            updateUITexts();
+
+            document.getElementById('difficulty-select').addEventListener('change', (e) => {
+                difficulty = e.target.value;
+            });
+            document.getElementById('decade-filter').addEventListener('change', (e) => {
+                decadeFilter = e.target.value;
+            });
+
+            document.getElementById('play-fragment-btn').addEventListener('click', playFragment);
+
+            document.querySelectorAll('.option-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const idx = e.currentTarget.dataset.option;
+                    handleAnswer(parseInt(idx));
+                });
+            });
+
+            document.getElementById('joker-skip')?.addEventListener('click', useSkip);
+            document.getElementById('joker-fifty')?.addEventListener('click', useFifty);
+
+            if (document.getElementById('add-player-btn')) {
+                document.getElementById('add-player-btn').addEventListener('click', addPlayer);
+            }
+
+            document.getElementById('new-round-btn').addEventListener('click', () => {
+                if (!answerLocked) startNewRound();
+            });
+
+            document.getElementById('reset-game-btn').addEventListener('click', () => {
+                if (confirm('¿Reiniciar el juego?')) {
+                    resetGame();
+                }
+            });
+        }
+
+        // ========== MANEJAR CAMBIO DE MODO ==========
+        modeSelect.addEventListener('change', (e) => {
+            currentMode = e.target.value;
+            if (currentMode === 'hitster') {
+                hitsterOptionsDiv.classList.remove('hidden');
+            } else {
+                hitsterOptionsDiv.classList.add('hidden');
+            }
+            // Mostrar/ocultar botón de carpeta de películas
+            if (currentMode === 'movie') {
+                movieFolderBtn.classList.remove('hidden');
+            } else {
+                movieFolderBtn.classList.add('hidden');
+            }
+            resetGame();
+        });
+
+        hitsterQuestionSelect.addEventListener('change', (e) => {
+            hitsterQuestionType = e.target.value;
+            if (currentMode === 'hitster' && currentTrack) {
+                generateOptions(currentTrack);
+                renderGame();
+            }
+        });
+
+        // ========== INICIALIZACIÓN ==========
+        async function initGame() {
+            try {
+                await openDB();
+                tracks = await loadTracks();
+                loadRanking();
+                if (tracks.length === 0) {
+                    contentDiv.innerHTML = `
+                        <p class="status" data-i18n="no_songs">❌ No hay canciones en la biblioteca.</p>
+                        <p><a href="index.html" style="color:#ffd966;" data-i18n="load_songs">Ve al reproductor y carga música.</a></p>
+                    `;
+                    updateUITexts();
+                } else {
+                    resetGame();
+                }
+            } catch (e) {
+                console.error(e);
+                contentDiv.innerHTML = `<p class="status">Error al cargar la biblioteca.</p>`;
+            }
+        }
+
+        initGame();
+    })();
+</script>
+</body>
+</html>
